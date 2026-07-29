@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Febz Ai - Asisten AI Pintar</title>
+    <meta name="description" content="Febz Ai - Asisten AI yang dibuat oleh FebzDeveloper. Chat pintar, cepat, dan mudah digunakan.">
+    <meta name="author" content="FebzDeveloper">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f0f13;
+            --bg-secondary: #1a1a24;
+            --bg-tertiary: #252533;
+            --accent: #7c5cfc;
+            --accent-hover: #6a4ae8;
+            --accent-soft: rgba(124, 92, 252, 0.15);
+            --text-primary: #f0f0f5;
+            --text-secondary: #a0a0b8;
+            --user-bubble: #7c5cfc;
+            --ai-bubble: #252533;
+            --border: #2e2e3e;
+            --success: #22c55e;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #7c5cfc, #a78bfa);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 4px 15px rgba(124, 92, 252, 0.35);
+        }
+
+        .logo-text h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #a78bfa, #c4b5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-text p {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 1px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-icon {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+
+        .btn-icon:hover {
+            background: var(--accent-soft);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Chat Area */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            scroll-behavior: smooth;
+        }
+
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            max-width: 85%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 18px;
+        }
+
+        .message.ai .avatar {
+            background: linear-gradient(135deg, #7c5cfc, #a78bfa);
+        }
+
+        .message.user .avatar {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+        }
+
+        .bubble {
+            padding: 12px 16px;
+            border-radius: 16px;
+            line-height: 1.55;
+            font-size: 0.95rem;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .message.ai .bubble {
+            background: var(--ai-bubble);
+            border: 1px solid var(--border);
+            border-top-left-radius: 4px;
+        }
+
+        .message.user .bubble {
+            background: var(--user-bubble);
+            border-top-right-radius: 4px;
+            color: white;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 5px;
+            padding: 14px 18px;
+            background: var(--ai-bubble);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            border-top-left-radius: 4px;
+            width: fit-content;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        /* Welcome */
+        .welcome {
+            text-align: center;
+            margin: auto;
+            padding: 40px 20px;
+            max-width: 480px;
+        }
+
+        .welcome-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .welcome h2 {
+            font-size: 1.6rem;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #a78bfa, #c4b5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .suggestion {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 10px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .suggestion:hover {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+            color: #c4b5fd;
+        }
+
+        /* Input Area */
+        .input-area {
+            padding: 16px 20px 20px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .input-box {
+            flex: 1;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            resize: none;
+            min-height: 48px;
+            max-height: 150px;
+            outline: none;
+            font-family: inherit;
+            line-height: 1.45;
+            transition: border-color 0.2s;
+        }
+
+        .input-box:focus {
+            border-color: var(--accent);
+        }
+
+        .input-box::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .btn-send {
+            background: var(--accent);
+            border: none;
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .btn-send:hover:not(:disabled) {
+            background: var(--accent-hover);
+            transform: scale(1.05);
+        }
+
+        .btn-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 10px;
+        }
+
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        /* Modal Settings */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 420px;
+            width: 100%;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .modal h3 {
+            margin-bottom: 8px;
+            font-size: 1.15rem;
+        }
+
+        .modal p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .modal label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .modal input, .modal select {
+            width: 100%;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            margin-bottom: 14px;
+            outline: none;
+        }
+
+        .modal input:focus, .modal select:focus {
+            border-color: var(--accent);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 8px;
+        }
+
+        .btn {
+            padding: 9px 18px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            color: var(--text-primary);
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .message {
+                max-width: 92%;
+            }
+            .header {
+                padding: 10px 14px;
+            }
+            .chat-container {
+                padding: 14px;
+            }
+            .input-area {
+                padding: 12px 14px 16px;
+            }
+            .welcome h2 {
+                font-size: 1.35rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">🤖</div>
+            <div class="logo-text">
+                <h1>Febz Ai</h1>
+                <p>by FebzDeveloper</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn-icon" onclick="clearChat()" title="Hapus chat">🗑️</button>
+            <button class="btn-icon" onclick="openSettings()" title="Pengaturan">⚙️</button>
+        </div>
+    </header>
+
+    <!-- Chat Area -->
+    <div class="chat-container" id="chatContainer">
+        <div class="welcome" id="welcome">
+            <div class="welcome-icon">✨</div>
+            <h2>Hai! Aku Febz Ai</h2>
+            <p>Asisten AI yang dibuat oleh <strong>FebzDeveloper</strong>. Tanya apa saja, aku siap membantu!</p>
+            <div class="suggestions">
+                <button class="suggestion" onclick="sendSuggestion('Halo, siapa kamu?')">Halo, siapa kamu?</button>
+                <button class="suggestion" onclick="sendSuggestion('Ceritakan tentang Indonesia')">Tentang Indonesia</button>
+                <button class="suggestion" onclick="sendSuggestion('Buatkan puisi singkat')">Buatkan puisi</button>
+                <button class="suggestion" onclick="sendSuggestion('Tips belajar coding')">Tips coding</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="input-area">
+        <div class="input-wrapper">
+            <textarea 
+                class="input-box" 
+                id="userInput" 
+                placeholder="Ketik pesanmu di sini..." 
+                rows="1"
+                onkeydown="handleKey(event)"
+            ></textarea>
+            <button class="btn-send" id="sendBtn" onclick="sendMessage()">➤</button>
+        </div>
+        <div class="footer">
+            Febz Ai © 2026 • Dibuat dengan ❤️ oleh <strong>FebzDeveloper</strong>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <h3>⚙️ Pengaturan</h3>
+            <p>Atur cara Febz Ai merespons. Mode lokal bekerja tanpa internet/API key.</p>
+            
+            <label>Mode AI</label>
+            <select id="aiMode">
+                <option value="local">Lokal (Rule-based - Offline)</option>
+                <option value="demo">Demo (Respons pintar)</option>
+            </select>
+
+            <label>Nama Asisten</label>
+            <input type="text" id="aiName" value="Febz Ai" maxlength="30">
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeSettings()">Batal</button>
+                <button class="btn btn-primary" onclick="saveSettings()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== KONFIGURASI ==========
+        let aiName = "Febz Ai";
+        let aiMode = "demo"; // local | demo
+        let isTyping = false;
+
+        // ========== RESPONS PINTAR (DEMO) ==========
+        const knowledge = {
+            greetings: ["halo", "hai", "hello", "hi", "selamat", "pagi", "siang", "malam", "assalamualaikum"],
+            about: ["siapa kamu", "apa kamu", "tentang kamu", "nama kamu", "kamu siapa", "perkenalkan"],
+            creator: ["pembuat", "dibuat", "developer", "febzdeveloper", "siapa yang buat", "creator"],
+            indonesia: ["indonesia", "nkri", "jakarta", "nusantara"],
+            coding: ["coding", "program", "code", "javascript", "html", "python", "belajar coding"],
+            puisi: ["puisi", "sajak", "pantun"],
+            tips: ["tips", "cara", "bagaimana", "how to"],
+            thank: ["terima kasih", "makasih", "thanks", "thank you"],
+            bye: ["dadah", "bye", "selamat tinggal", "sampai jumpa"]
+        };
+
+        function getSmartResponse(msg) {
+            const lower = msg.toLowerCase().trim();
+
+            // Greetings
+            if (knowledge.greetings.some(w => lower.includes(w))) {
+                const replies = [
+                    `Halo! 👋 Aku ${aiName}, asisten AI buatan FebzDeveloper. Ada yang bisa aku bantu hari ini?`,
+                    `Hai! Senang bertemu denganmu. Aku ${aiName}, siap membantu apa saja!`,
+                    `Halo juga! 😊 Ada pertanyaan atau yang ingin kamu diskusikan?`
+                ];
+                return replies[Math.floor(Math.random() * replies.length)];
+            }
+
+            // About AI
+            if (knowledge.about.some(w => lower.includes(w))) {
+                return `Aku adalah ${aiName}, asisten AI yang dibuat oleh <strong>FebzDeveloper</strong>.\n\nAku dirancang untuk membantu menjawab pertanyaan, memberikan ide, menulis puisi, tips coding, dan banyak lagi. Aku berjalan sepenuhnya di browser kamu — cepat dan privat! 🚀`;
+            }
+
+            // Creator
+            if (knowledge.creator.some(w => lower.includes(w))) {
+                return `Aku dibuat dengan penuh semangat oleh <strong>FebzDeveloper</strong> 👨‍💻\n\nTerima kasih sudah menggunakan ${aiName}!`;
+            }
+
+            // Indonesia
+            if (knowledge.indonesia.some(w => lower.includes(w))) {
+                return `🇮🇩 <strong>Indonesia</strong> adalah negara kepulauan terbesar di dunia dengan lebih dari 17.000 pulau!\n\n• Ibu kota: Jakarta (nanti pindah ke Ibu Kota Nusantara)\n• Bahasa resmi: Bahasa Indonesia\n• Populasi: ±280 juta jiwa\n• Motto: Bhinneka Tunggal Ika (Berbeda-beda tetap satu)\n• Makanan legendaris: Nasi goreng, Rendang, Sate, Gado-gado\n\nAda yang ingin kamu ketahui lebih detail tentang Indonesia?`;
+            }
+
+            // Coding tips
+            if (knowledge.coding.some(w => lower.includes(w))) {
+                return `💻 <strong>Tips Belajar Coding dari ${aiName}:</strong>\n\n1. Mulai dari dasar — HTML, CSS, lalu JavaScript\n2. Latihan setiap hari (meski cuma 30 menit)\n3. Buat project kecil: to-do list, kalkulator, chat AI (seperti ini!)\n4. Baca error message, jangan takut salah\n5. Ikuti dokumentasi resmi & channel YouTube bagus\n6. Bergabung di komunitas (Discord, Telegram coding)\n\nMau rekomendasi roadmap lengkap?`;
+            }
+
+            // Puisi
+            if (knowledge.puisi.some(w => lower.includes(w))) {
+                const poems = [
+                    `📜 <strong>Puisi untukmu:</strong>\n\nDi balik layar yang gelap,\nKode-kode menari indah.\n${aiName} hadir menemani,\nMembantu setiap pertanyaanmu.\n\n— FebzDeveloper`,
+                    `🌸 <strong>Puisi singkat:</strong>\n\nBintang di langit malam,\nMenyinari jalan yang sunyi.\nSeperti AI yang setia,\nSelalu siap menjawab hati.`,
+                    `✨ <strong>Pantun:</strong>\n\nJalan-jalan ke Surabaya,\nBeli oleh-oleh bakpia.\nKalau mau jadi hebat,\nBelajar coding tiap hari ya!`
+                ];
+                return poems[Math.floor(Math.random() * poems.length)];
+            }
+
+            // Thanks
+            if (knowledge.thank.some(w => lower.includes(w))) {
+                return `Sama-sama! 😊 Senang bisa membantu. Kalau ada lagi yang mau ditanyakan, langsung saja ya!`;
+            }
+
+            // Bye
+            if (knowledge.bye.some(w => lower.includes(w))) {
+                return `Sampai jumpa! 👋 Terima kasih sudah chat dengan ${aiName}. Semoga harimu menyenangkan!`;
+            }
+
+            // Time
+            if (lower.includes("jam berapa") || lower.includes("waktu") || lower.includes("hari ini")) {
+                const now = new Date();
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' };
+                return `🕐 Sekarang: <strong>${now.toLocaleDateString('id-ID', options)} WIB</strong>`;
+            }
+
+            // Default smart responses
+            const defaults = [
+                `Menarik! Tentang "${msg}", aku bisa bilang bahwa ini topik yang bagus untuk dieksplorasi.\n\nBisa kamu jelaskan lebih detail apa yang ingin kamu ketahui? Aku akan coba bantu sebaik mungkin! 💡`,
+                `Hmm, pertanyaan bagus! 🤔\n\nBerdasarkan pengetahuanku, topik ini cukup luas. Coba tanyakan lebih spesifik, misalnya:\n• "Jelaskan lebih detail tentang X"\n• "Berikan contoh Y"\n• "Buatkan Z untukku"\n\nAku siap membantu!`,
+                `Terima kasih sudah bertanya! Aku ${aiName} buatan FebzDeveloper.\n\nUntuk jawaban yang lebih akurat, coba perjelas pertanyaanmu. Atau tanyakan hal lain seperti tips coding, puisi, atau fakta menarik! ✨`,
+                `Aku mengerti kamu bertanya tentang "${msg.slice(0, 40)}${msg.length > 40 ? '...' : ''}".\n\nSaat ini aku berjalan dalam mode demo di browser. Aku bisa membantu dengan:\n• Percakapan santai\n• Tips & ide\n• Puisi & pantun\n• Fakta Indonesia\n• Info dasar coding\n\nMau coba salah satunya?`
+            ];
+            return defaults[Math.floor(Math.random() * defaults.length)];
+        }
+
+        // ========== UI FUNCTIONS ==========
+        function appendMessage(text, isUser = false) {
+            const container = document.getElementById('chatContainer');
+            const welcome = document.getElementById('welcome');
+            if (welcome) welcome.remove();
+
+            const msg = document.createElement('div');
+            msg.className = `message ${isUser ? 'user' : 'ai'}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = isUser ? '👤' : '🤖';
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            bubble.innerHTML = text;
+            
+            msg.appendChild(avatar);
+            msg.appendChild(bubble);
+            container.appendChild(msg);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function showTyping() {
+            const container = document.getElementById('chatContainer');
+            const typing = document.createElement('div');
+            typing.className = 'message ai';
+            typing.id = 'typing';
+            typing.innerHTML = `
+                <div class="avatar">🤖</div>
+                <div class="typing-indicator">
+                    <span></span><span></span><span></span>
+                </div>
+            `;
+            container.appendChild(typing);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function hideTyping() {
+            const typing = document.getElementById('typing');
+            if (typing) typing.remove();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (!text || isTyping) return;
+
+            appendMessage(text, true);
+            input.value = '';
+            input.style.height = 'auto';
+            isTyping = true;
+            document.getElementById('sendBtn').disabled = true;
+
+            showTyping();
+
+            // Simulate thinking delay
+            const delay = 600 + Math.random() * 900;
+            await new Promise(r => setTimeout(r, delay));
+
+            hideTyping();
+            const response = getSmartResponse(text);
+            appendMessage(response, false);
+
+            isTyping = false;
+            document.getElementById('sendBtn').disabled = false;
+            input.focus();
+        }
+
+        function sendSuggestion(text) {
+            document.getElementById('userInput').value = text;
+            sendMessage();
+        }
+
+        function handleKey(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // Auto-resize textarea
+        document.getElementById('userInput').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+        });
+
+        function clearChat() {
+            if (confirm('Hapus semua percakapan?')) {
+                const container = document.getElementById('chatContainer');
+                container.innerHTML = `
+                    <div class="welcome" id="welcome">
+                        <div class="welcome-icon">✨</div>
+                        <h2>Hai! Aku ${aiName}</h2>
+                        <p>Asisten AI yang dibuat oleh <strong>FebzDeveloper</strong>. Tanya apa saja, aku siap membantu!</p>
+                        <div class="suggestions">
+                            <button class="suggestion" onclick="sendSuggestion('Halo, siapa kamu?')">Halo, siapa kamu?</button>
+                            <button class="suggestion" onclick="sendSuggestion('Ceritakan tentang Indonesia')">Tentang Indonesia</button>
+                            <button class="suggestion" onclick="sendSuggestion('Buatkan puisi singkat')">Buatkan puisi</button>
+                            <button class="suggestion" onclick="sendSuggestion('Tips belajar coding')">Tips coding</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function openSettings() {
+            document.getElementById('settingsModal').classList.add('show');
+            document.getElementById('aiName').value = aiName;
+            document.getElementById('aiMode').value = aiMode;
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('show');
+        }
+
+        function saveSettings() {
+            aiName = document.getElementById('aiName').value.trim() || 'Febz Ai';
+            aiMode = document.getElementById('aiMode').value;
+            closeSettings();
+            // Update logo text if needed
+            document.querySelector('.logo-text h1').textContent = aiName;
+        }
+
+        // Focus input on load
+        document.getElementById('userInput').focus();
+    </script>
+</body>
+</html>
+
